@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Arduino Competition</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Firebase Scripts - APENAS Firestore (GRATUITO) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #0A1654;
+            --primary-yellow: #F6C421;
+            --primary-red: #E4362D;
+            --secondary-blue: #052d92;
+            --accent-cyan: #2f7693;
+            --text-dark: #0A1654;
+            --text-light: #4862A4;
+            --bg-light: #FAFBFC;
+            --card-bg: #ffffff;
+            --shadow-light: 0 2px 10px rgba(10, 22, 84, 0.1);
+            --shadow-medium: 0 6px 25px rgba(10, 22, 84, 0.15);
+            --shadow-heavy: 0 10px 40px rgba(10, 22, 84, 0.2);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary-blue: #1E3A8A;
+            --primary-yellow: #FCD34D;
+            --primary-red: #EF4444;
+            --secondary-blue: #3B82F6;
+            --accent-cyan: #06B6D4;
+            --text-dark: #F8FAFC;
+            --text-light: #CBD5E1;
+            --bg-light: #0F172A;
+            --card-bg: #1E293B;
+            --sidebar-bg: #0F172A;
+            --sidebar-bg-secondary: #1E293B;
+            --border-color: rgba(148, 163, 184, 0.2);
+            --hover-bg: rgba(148, 163, 184, 0.1);
+            --input-bg: #334155;
+            --table-header-bg: #334155;
+            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.4);
+            --shadow-medium: 0 6px 25px rgba(0, 0, 0, 0.5);
+            --shadow-heavy: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        [data-theme="dark"] .sidebar {
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-secondary) 100%);
+        }
+
+        [data-theme="dark"] .exercise-card {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .exercise-image {
+            background: linear-gradient(135deg, var(--input-bg), var(--card-bg));
+            color: var(--accent-cyan);
+        }
+
+        [data-theme="dark"] .exercise-title {
+            color: var(--accent-cyan);
+        }
+
+        [data-theme="dark"] .exercise-content {
+            color: var(--text-light);
+        }
+
+        [data-theme="dark"] .stat-card {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .stat-number {
+            color: var(--accent-cyan);
+        }
+
+        [data-theme="dark"] .stat-label {
+            color: var(--text-light);
+        }
+
+        [data-theme="dark"] .month-card {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .month-name {
+            color: var(--accent-cyan);
+        }
+
+        [data-theme="dark"] .month-events {
+            color: var(--text-light);
+        }
+
+        [data-theme="dark"] .calendar-day {
+            background: var(--card-bg);
+            color: var(--text-dark);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .calendar-day:hover {
+            background: var(--hover-bg);
+        }
+
+        [data-theme="dark"] .calendar-day.has-event {
+            background: rgba(6, 182, 212, 0.2);
+        }
+
+        [data-theme="dark"] .calendar-header {
+            background: var(--primary-blue);
+        }
+
+        [data-theme="dark"] .event {
+            background: var(--accent-cyan);
+            color: var(--bg-light);
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--card-bg);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .close {
+            color: var(--text-light);
+        }
+
+        [data-theme="dark"] .close:hover {
+            color: var(--accent-cyan);
+        }
+
+        [data-theme="dark"] .form-control {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .form-control:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        [data-theme="dark"] .form-group label {
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .table {
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .table th {
+            background: var(--table-header-bg);
+            color: var(--text-dark);
+        }
+
+        [data-theme="dark"] .table td {
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .table tr:hover {
+            background: var(--hover-bg);
+        }
+
+        [data-theme="dark"] .code-preview {
+            background: var(--input-bg);
+            border-left-color: var(--accent-cyan);
+            color: var(--text-light);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-blue) 0%, #051033 100%);
+            color: white;
+            padding: 0;
+            box-shadow: var(--shadow-heavy);
+            position: fixed;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .logo {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .logo img {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+            filter: brightness(1.1);
+            transition: var(--transition);
+        }
+
+
+        .logo img:hover {
+            transform: scale(1.05);
+        }
+
+        .logo p {
+            font-size: 0.9em;
+            opacity: 0.85;
+            font-weight: 400;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                padding: 20px 15px;
+            }
+
+            .logo img {
+                max-width: 75%;
+                max-height: 50px;
+            }
+
+            .logo p {
+                font-size: 0.8em;
+                margin-top: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                padding: 15px 10px;
+            }
+
+            .logo img {
+                max-height: 65px;
+            }
+
+            .logo p {
+                font-size: 0.75em;
+                margin-top: 6px;
+            }
+        }
+
+        .nav-menu {
+            padding: 25px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-left: 4px solid transparent;
+            font-weight: 500;
+            margin: 2px 0;
+        }
+
+        .nav-item:hover {
+            background: rgba(246, 196, 33, 0.15);
+            border-left-color: var(--primary-yellow);
+            transform: translateX(3px);
+        }
+
+        .nav-item.active {
+            background: rgba(246, 196, 33, 0.2);
+            border-left-color: var(--primary-yellow);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 22px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            width: 100vw;
+            margin-left: 280px;
+            padding: 40px;
+            background: var(--bg-light);
+            min-height: 100vh;
+        }
+
+        .header {
+            width: calc(100vw - 350px);
+            /* padrão para telas grandes */
+            padding: 35px 40px;
+            box-sizing: border-box;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-medium);
+            border: 1px solid var(--border-color, rgba(10, 22, 84, 0.08));
+            background: var(--card-bg);
+        }
+
+        /* 📱 Responsivo para telas pequenas */
+        @media (max-width: 768px) {
+            .header {
+                width: 95vw;
+                padding: 25px 20px;
+                /* reduz um pouco o padding pra caber bem */
+            }
+        }
+
+
+        .header h2 {
+            color: var(--text-dark);
+            font-size: 2em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), #051033);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent-cyan), #4AB8E0);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--primary-yellow), #E6B01E);
+            color: var(--primary-blue);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--primary-red), #CC2F26);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 35px;
+            box-shadow: var(--shadow-medium);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color, rgba(10, 22, 84, 0.08));
+            transition: var(--transition);
+        }
+
+
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .card h3 {
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .history-card {
+            width: calc(100vw - 350px);
+
+            /* 100% da largura da tela - 40px de cada lado */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 600px) {
+            .history-card {
+                width: calc(100vw - 30px);
+                /* distância menor nas laterais do celular */
+            }
+        }
+
+        .calendary-card {
+            width: calc(100vw - 350px);
+
+            /* 100% da largura da tela - 40px de cada lado */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 600px) {
+            .calendary-card {
+                width: calc(100vw - 30px);
+                /* distância menor nas laterais do celular */
+            }
+        }
+
+        .grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: flex-start;
+        }
+
+        .exercise-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color, rgba(10, 22, 84, 0.12));
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--shadow-light);
+            flex: 0 0 calc(33.333% - 17px);
+            min-width: 300px;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-heavy);
+            border-color: var(--accent-cyan);
+        }
+
+        .exercise-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, var(--bg-light), var(--card-bg));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+            font-size: 3em;
+        }
+
+        .exercise-content {
+            padding: 20px;
+        }
+
+        .exercise-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .code-preview {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 10px 0;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table th {
+            background: var(--card-bg);
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .table tr:hover {
+            background: var(--hover-bg, #f8f9fa);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: var(--text-dark);
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: var(--accent-cyan);
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color, #e0e0e0);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .calendar-day {
+            background: var(--card-bg);
+            padding: 15px;
+            min-height: 100px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: var(--text-dark);
+        }
+
+        .calendar-day:hover {
+            background: var(--hover-bg, #F0F4FF);
+        }
+
+        .calendar-day.has-event {
+            background: var(--hover-bg, rgba(10, 22, 84, 0.1));
+        }
+
+        .event {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin: 2px 0;
+        }
+
+        /* Responsividade do calendário para mobile */
+        @media (max-width: 768px) {
+            .calendary-card {
+                width: calc(100vw - 40px);
+                padding: 15px;
+            }
+
+            .calendary-card h3 {
+                font-size: 1.1em;
+                margin-bottom: 15px;
+            }
+
+            .calendary-card h3 span {
+                font-size: 0.9em;
+            }
+
+            .calendar-header {
+                padding: 8px 4px;
+                font-size: 0.8em;
+            }
+
+            .calendar-day {
+                padding: 6px 4px;
+                min-height: 60px;
+                font-size: 0.85em;
+            }
+
+            .event {
+                padding: 2px 4px;
+                font-size: 0.7em;
+                margin: 1px 0;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+            }
+
+            .btn i {
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendary-card {
+                width: calc(100vw - 20px);
+                padding: 10px;
+            }
+
+            .calendar-navigation {
+                margin-bottom: 15px !important;
+            }
+
+            .calendary-card h3 {
+                font-size: 1em;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+
+            .calendary-card h3 span {
+                font-size: 0.85em;
+            }
+
+            .calendar-header {
+                padding: 6px 2px;
+                font-size: 0.7em;
+            }
+
+            .calendar-day {
+                padding: 4px 2px;
+                min-height: 50px;
+                font-size: 0.75em;
+            }
+
+            .event {
+                padding: 1px 2px;
+                font-size: 0.6em;
+                margin: 0.5px 0;
+            }
+
+            .btn {
+                padding: 6px 8px;
+                font-size: 0.7em;
+            }
+
+            .nav-text {
+                display: none;
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .month-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color, #e0e0e0);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            color: var(--text-dark);
+        }
+
+        .month-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .month-card.current {
+            border-color: var(--accent-cyan);
+            background: var(--hover-bg, #F0F4FF);
+        }
+
+        .month-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .month-events {
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+
+        /* Responsividade do modal anual */
+        @media (max-width: 768px) {
+            #yearViewModal .modal-content {
+                max-width: 95%;
+                margin: 2% auto;
+                padding: 20px;
+            }
+
+            #yearViewGrid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 10px !important;
+            }
+
+            .month-card {
+                padding: 10px;
+            }
+
+            .month-name {
+                font-size: 0.9em;
+                margin-bottom: 5px;
+            }
+
+            .month-events {
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #yearViewModal .modal-content {
+                max-width: 98%;
+                margin: 1% auto;
+                padding: 15px;
+            }
+
+            #yearViewGrid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+
+            .month-card {
+                padding: 8px;
+            }
+
+            .month-name {
+                font-size: 0.8em;
+                margin-bottom: 4px;
+            }
+
+            .month-events {
+                font-size: 0.7em;
+            }
+
+            #yearViewTitle {
+                font-size: 1.2em;
+            }
+        }
+
+        .card h3[onclick] {
+            transition: var(--transition);
+        }
+
+        .card h3[onclick]:hover {
+            color: var(--secondary-blue);
+            transform: scale(1.02);
+        }
+
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 35px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-medium);
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--border-color, rgba(0, 151, 157, 0.08));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-cyan));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .stat-number {
+            font-size: 2.8em;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.95em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                justify-content: center;
+            }
+
+            .exercise-card {
+                flex: 0 0 100%;
+                min-width: auto;
+            }
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <img src="assets/logoStart.png" alt="Logo da Empresa">
+                <p>Ambiente de Suporte</p>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" onclick="showSection('dashboard')">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="showSection('exercises')">
+                    <i class="fas fa-code"></i>
+                    <span>Exercícios</span>
+                </div>
+                <div class="nav-item" onclick="showSection('materials')">
+                    <i class="fas fa-book"></i>
+                    <span>Materiais</span>
+                </div>
+                <div class="nav-item" onclick="showSection('quiz')">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Quiz Online</span>
+                </div>
+                <div class="nav-item" onclick="showSection('schools')">
+                    <i class="fas fa-school"></i>
+                    <span>Escolas</span>
+                </div>
+                <div class="nav-item" onclick="showSection('calendar')">
+                    <i class="fas fa-calendar"></i>
+                    <span>Calendário</span>
+                </div>
+                <div class="nav-item" onclick="showSection('admin')">
+                    <i class="fas fa-cog"></i>
+                    <span>Administração</span>
+                </div>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="content-section active">
+                <div class="header">
+                    <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalSchools">12</div>
+                        <div class="stat-label">Escolas Cadastradas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalStudents">248</div>
+                        <div class="stat-label">Alunos Participantes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalExercises">15</div>
+                        <div class="stat-label">Exercícios Disponíveis</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="upcomingEvents">3</div>
+                        <div class="stat-label">Próximos Eventos</div>
+                    </div>
+                </div>
+
+                <div class="card history-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h3 style="margin-bottom: 0;"><i class="fas fa-clock"></i> Atividades Recentes</h3>
+                        <button class="btn btn-secondary" onclick="openModal('historyModal')"
+                            style="padding: 8px 16px; font-size: 0.9em;">
+                            <i class="fas fa-history"></i> Histórico
+                        </button>
+                    </div>
+                    <div id="recentActivities">
+                        <!-- Atividades serão carregadas aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercises Section -->
+            <div id="exercises" class="content-section">
+                <div class="header">
+                    <h2><i class="fas fa-code"></i> Exercícios Resolvidos</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openModal('exerciseModal')">
+                            <i class="fas fa-plus"></i> Novo Exercício
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-3" id="exercisesList">
+                    <!-- Exercícios serão carregados aqui -->
+                </div>
+            </div>
+
+            <!-- Materials Section -->
+            <div id="materials" class="content-section">
+                <div class="header">
+                    <h2><i class="fas fa-book"></i> Materiais de Apoio</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openModal('materialModal')">
+                            <i class="fas fa-upload"></i> Upload Material
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-file-pdf"></i> PDFs e Guias</h3>
+                    <div id="materialsList">
+                        <!-- Materiais serão carregados aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Section -->
+            <div id="quiz" class="content-section">
+                <div class="header">
+                    <h2><i class="fas fa-question-circle"></i> Quiz Online</h2>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-external-link-alt"></i> Acesso ao Quiz</h3>
+                    <p>Clique no botão abaixo para acessar o quiz online da competição:</p>
+                    <br>
+                    <a href="#" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-play"></i> Iniciar Quiz
+                    </a>
+                </div>
+            </div>
+
+            <!-- Schools Section -->
+            <div id="schools" class="content-section">
+                <div class="header">
+                    <h2><i class="fas fa-school"></i> Gerenciar Escolas</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openModal('schoolModal')">
+                            <i class="fas fa-plus"></i> Nova Escola
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-search"></i> Buscar Escola</h3>
+                    <input type="text" class="form-control" placeholder="Digite o nome da escola..."
+                        onkeyup="filterSchools(this.value)">
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-list"></i> Lista de Escolas</h3>
+                    <div id="schoolsList">
+                        <!-- Escolas serão carregadas aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Section -->
+            <div id="calendar" class="content-section">
+                <div class="header">
+                    <h2><i class="fas fa-calendar"></i> Calendário de Eventos</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openModal('eventModal')">
+                            <i class="fas fa-plus"></i> Novo Evento
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card calendary-card">
+                    <div class="calendar-navigation"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <button class="btn btn-secondary" onclick="changeMonth(-1)">
+                            <i class="fas fa-chevron-left"></i> <span class="nav-text">Anterior</span>
+                        </button>
+                        <h3 style="cursor: pointer;" onclick="openModal('yearViewModal')"
+                            title="Clique para visualização anual">
+                            <i class="fas fa-calendar-alt"></i> <span id="currentMonth">Janeiro 2024</span>
+                        </h3>
+                        <button class="btn btn-secondary" onclick="changeMonth(1)">
+                            <span class="nav-text">Próximo</span> <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div id="calendarGrid" class="calendar">
+                        <!-- Calendário será gerado aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Section -->
+            <div id="admin" class="content-section">
+                <div class="header">
+                    <h2><i class="fas fa-cog"></i> Administração</h2>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3><i class="fas fa-moon"></i> Tema Escuro</h3>
+                        <p>Alterne entre tema claro e escuro</p>
+                        <button class="btn btn-success" onclick="toggleTheme()" id="themeToggleBtn">
+                            <i class="fas fa-moon"></i> Ativar Tema Escuro
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-database"></i> Backup de Dados</h3>
+                        <p>Faça backup dos dados do sistema</p>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Fazer Backup
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-users"></i> Gerenciar Usuários</h3>
+                        <p>Adicione ou remova usuários do sistema</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Gerenciar
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Reset Firebase</h3>
+                        <p>CUIDADO: Apaga todos os dados do Firebase</p>
+                        <button class="btn btn-danger" onclick="resetFirebaseDatabase()">
+                            <i class="fas fa-trash-alt"></i> Resetar BD
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="exerciseModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('exerciseModal')">&times;</span>
+            <h3>Novo Exercício</h3>
+            <form id="exerciseForm">
+                <div class="form-group">
+                    <label>Título do Exercício</label>
+                    <input type="text" class="form-control" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea class="form-control" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Código Arduino</label>
+                    <textarea class="form-control" name="code" rows="8" style="font-family: monospace;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Imagem do Circuito</label>
+                    <input type="file" class="form-control" name="image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Link do Tinkercad</label>
+                    <input type="url" class="form-control" name="tinkercad"
+                        placeholder="https://www.tinkercad.com/things/...">
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Exercício</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="schoolModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('schoolModal')">&times;</span>
+            <h3>Nova Escola</h3>
+            <form id="schoolForm">
+                <div class="form-group">
+                    <label>Nome da Escola</label>
+                    <input type="text" class="form-control" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" class="form-control" name="address">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" class="form-control" name="phone">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" name="email">
+                </div>
+                <button type="submit" class="btn btn-primary">Cadastrar Escola</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('eventModal')">&times;</span>
+            <h3>Novo Evento</h3>
+            <form id="eventForm">
+                <div class="form-group">
+                    <label>Título do Evento</label>
+                    <input type="text" class="form-control" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" class="form-control" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label>Horário</label>
+                    <input type="time" class="form-control" name="time">
+                </div>
+                <div class="form-group">
+                    <label>Escola</label>
+                    <select class="form-control" name="school" id="eventSchoolSelect">
+                        <option value="">Selecione uma escola</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bolsistas Responsáveis</label>
+                    <input type="text" class="form-control" name="scholars" placeholder="Nome dos bolsistas">
+                </div>
+                <button type="submit" class="btn btn-primary">Agendar Evento</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="materialModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('materialModal')">&times;</span>
+            <h3>Upload Material</h3>
+            <form id="materialForm">
+                <div class="form-group">
+                    <label>Título do Material</label>
+                    <input type="text" class="form-control" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea class="form-control" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select class="form-control" name="category" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="guia">Guia de Estudo</option>
+                        <option value="tutorial">Tutorial</option>
+                        <option value="referencia">Material de Referência</option>
+                        <option value="exercicio">Lista de Exercícios</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Arquivo (PDF, DOC, DOCX, TXT)</label>
+                    <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.txt" required>
+                    <small style="color: #666; font-size: 0.9em;">Tamanho máximo: 10MB</small>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload Material</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editSchoolModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editSchoolModal')">&times;</span>
+            <h3>Editar Escola</h3>
+            <form id="editSchoolForm">
+                <input type="hidden" id="editSchoolId">
+                <div class="form-group">
+                    <label>Nome da Escola</label>
+                    <input type="text" class="form-control" id="editSchoolName" required>
+                </div>
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" class="form-control" id="editSchoolAddress">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" class="form-control" id="editSchoolPhone">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" id="editSchoolEmail">
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="manageStudentsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeModal('manageStudentsModal')">&times;</span>
+            <h3 id="manageStudentsTitle">Gerenciar Alunos</h3>
+
+            <div id="studentsContent">
+                <div class="form-group">
+                    <label>Importar Alunos via Excel</label>
+                    <input type="file" class="form-control" id="studentsFile" accept=".xlsx,.xls,.csv">
+                    <small style="color: #666; font-size: 0.9em;">Formato esperado: Colunas "Nome" e "Ano"</small>
+                    <button type="button" class="btn btn-primary" onclick="importStudents()" style="margin-top: 10px;">
+                        <i class="fas fa-upload"></i> Importar Alunos
+                    </button>
+                </div>
+
+                <hr>
+
+                <div id="studentsList">
+                    <!-- Lista de alunos será carregada aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewEventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('viewEventModal')">&times;</span>
+            <h3 id="viewEventTitle">Detalhes do Evento</h3>
+            <div id="viewEventContent">
+                <!-- Conteúdo do evento será carregado aqui -->
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="editEventFromView()" id="editEventBtn">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button class="btn btn-danger" onclick="deleteEventFromView()" id="deleteEventBtn"
+                    style="margin-left: 10px;">
+                    <i class="fas fa-trash"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="yearViewModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close" onclick="closeModal('yearViewModal')">&times;</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="changeYear(-1)">
+                    <i class="fas fa-chevron-left"></i> Ano Anterior
+                </button>
+                <h3 id="yearViewTitle">2024</h3>
+                <button class="btn btn-secondary" onclick="changeYear(1)">
+                    Próximo Ano <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div id="yearViewGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                <!-- Meses do ano serão gerados aqui -->
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeModal('historyModal')">&times;</span>
+            <h3><i class="fas fa-history"></i> Histórico de Atividades (30 dias)</h3>
+            <div id="historyActivities" style="max-height: 500px; overflow-y: auto;">
+                <!-- Histórico será carregado aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config-free.js"></script>
+    <script src="github-storage.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
